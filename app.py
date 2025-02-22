@@ -308,8 +308,15 @@ def format_message(messages):
         else:
             buffer.write(f"{role}: {content}\n")
     formatted_message = buffer.getvalue()
-    with open("message_log.txt", "w", encoding="utf-8") as f:
-        f.write(formatted_message)
+    
+    # 只在非 Vercel 环境下写入日志文件
+    if not os.environ.get('VERCEL'):
+        try:
+            with open("message_log.txt", "w", encoding="utf-8") as f:
+                f.write(formatted_message)
+        except Exception as e:
+            print(f"Warning: Failed to write message log: {e}")
+    
     return formatted_message
 
 
