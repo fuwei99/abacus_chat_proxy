@@ -183,14 +183,16 @@ def send_message(message, model):
 
         def generate():
             try:
-                print("---------- Response ----------")
+                if not os.environ.get('VERCEL'):
+                    print("---------- Response ----------")
                 for line in response.iter_lines():
                     if line:
                         decoded_line = line.decode('utf-8')
                         try:
                             data = json.loads(decoded_line)
                             segment = data.get('segment', '')
-                            print(segment, end='')
+                            if not os.environ.get('VERCEL'):
+                                print(segment, end='')
                             openai_chunk = {
                                 "id": "chatcmpl-" + str(uuid.uuid4()),
                                 "object": "chat.completion.chunk",
@@ -205,18 +207,21 @@ def send_message(message, model):
                                 ]
                             }
                             yield f"data: {json.dumps(openai_chunk)}\n\n"
-                        
                         except json.JSONDecodeError:
-                            print(f"Failed to decode line: {decoded_line}")
-                print("\n---------- Response End ----------")
+                            if not os.environ.get('VERCEL'):
+                                print(f"Failed to decode line: {decoded_line}")
+                if not os.environ.get('VERCEL'):
+                    print("\n---------- Response End ----------")
                 yield f"data: [DONE]\n\n"
             except Exception as e:
-                print(f"Failed to send message: {e}")
+                if not os.environ.get('VERCEL'):
+                    print(f"Failed to send message: {e}")
                 yield f"data: {{\"error\": \"{e}\"}}\n\n"
 
         return Response(generate(), content_type='text/event-stream')
     except requests.exceptions.RequestException as e:
-        print(f"Failed to send message: {e}")
+        if not os.environ.get('VERCEL'):
+            print(f"Failed to send message: {e}")
         return jsonify({"error": "Failed to send message"}), 500
 
 def send_message_non_stream(message, model):
@@ -258,18 +263,22 @@ def send_message_non_stream(message, model):
         response.raise_for_status()
         buffer = io.StringIO()
         try:
-            print("---------- Response ----------")
+            if not os.environ.get('VERCEL'):
+                print("---------- Response ----------")
             for line in response.iter_lines():
                 if line:
                     decoded_line = line.decode('utf-8')
                     try:
                         data = json.loads(decoded_line)
                         segment = data.get('segment', '')
-                        print(segment, end='')
+                        if not os.environ.get('VERCEL'):
+                            print(segment, end='')
                         buffer.write(segment)
                     except json.JSONDecodeError:
-                        print(f"Failed to decode line: {decoded_line}")
-            print("\n---------- Response End ----------")
+                        if not os.environ.get('VERCEL'):
+                            print(f"Failed to decode line: {decoded_line}")
+            if not os.environ.get('VERCEL'):
+                print("\n---------- Response End ----------")
             openai_response = {
                 "id": "chatcmpl-" + str(uuid.uuid4()),
                 "object": "chat.completion",
