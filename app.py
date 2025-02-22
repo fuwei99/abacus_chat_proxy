@@ -6,6 +6,7 @@ import uuid
 import random
 import io
 import re
+import os
 
 app = Flask(__name__)
 
@@ -30,9 +31,30 @@ session = requests.Session()
 
 def init_session():
     global DYNAMIC_COOKIES, MODEL_MAP, CONVERSATION_ID, DEPLOYMENT_ID
-    config = json.loads(open("config.json").read())
-    DYNAMIC_COOKIES = config['cookies']
-    CONVERSATION_ID = config['conversationId']
+    try:
+        # 优先使用环境变量
+        DYNAMIC_COOKIES = os.environ.get('COOKIES')
+        CONVERSATION_ID = os.environ.get('CONVERSATION_ID')
+        
+        # 如果环境变量不存在，则尝试从配置文件加载
+        if not DYNAMIC_COOKIES or not CONVERSATION_ID:
+            config = {}
+            with open("config.txt", 'r', encoding='utf-8') as f:
+                for line in f:
+                    if '=' in line:
+                        key, value = line.strip().split('=', 1)
+                        config[key] = value
+            DYNAMIC_COOKIES = DYNAMIC_COOKIES or config['cookies']
+            CONVERSATION_ID = CONVERSATION_ID or config['conversationId']
+    except Exception as e:
+        print(f"Failed to load configuration: {e}")
+        return None
+    
+    # 删除多余的 JSON 配置加载
+    # config = json.loads(open("config.json").read())
+    # DYNAMIC_COOKIES = config['cookies']
+    # CONVERSATION_ID = config['conversationId']
+    
     headers = {
         'authority': 'abacus.ai',
         'method': 'POST',
@@ -319,4 +341,7 @@ def extract_role(messages):
 init_session()
 
 if __name__ == '__main__':
-    app.run(port=9876)
+    init_session()
+    # 支持本地运行和 Vercel 环境
+    port = int(os.environ.get('PORT', 9876))
+    app.run(host='0.0.0.0', port=port)
