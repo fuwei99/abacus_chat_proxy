@@ -29,6 +29,17 @@ CONVERSATION_ID = ""
 
 session = requests.Session()
 
+# 将路由定义移到函数外部
+@app.route('/')
+def index():
+    return jsonify({
+        "status": "running",
+        "endpoints": {
+            "models": "/v1/models",
+            "chat": "/v1/chat/completions"
+        }
+    })
+
 def init_session():
     global DYNAMIC_COOKIES, MODEL_MAP, CONVERSATION_ID, DEPLOYMENT_ID
     try:
@@ -49,17 +60,6 @@ def init_session():
     except Exception as e:
         print(f"Failed to load configuration: {e}")
         return None
-    
-    @app.route('/')
-    def index():
-        return jsonify({
-            "status": "running",
-            "endpoints": {
-                "models": "/v1/models",
-                "chat": "/v1/chat/completions"
-            }
-        })
-    
     headers = {
         'authority': 'abacus.ai',
         'method': 'POST',
