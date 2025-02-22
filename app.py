@@ -50,10 +50,15 @@ def init_session():
         print(f"Failed to load configuration: {e}")
         return None
     
-    # 删除多余的 JSON 配置加载
-    # config = json.loads(open("config.json").read())
-    # DYNAMIC_COOKIES = config['cookies']
-    # CONVERSATION_ID = config['conversationId']
+    @app.route('/')
+    def index():
+        return jsonify({
+            "status": "running",
+            "endpoints": {
+                "models": "/v1/models",
+                "chat": "/v1/chat/completions"
+            }
+        })
     
     headers = {
         'authority': 'abacus.ai',
